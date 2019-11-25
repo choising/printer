@@ -1,24 +1,39 @@
-plugins {
-	id 'org.springframework.boot' version '2.2.1.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
-	id 'java'
+buildscript {
+	ext {
+		springBootVersion = '2.1.0.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
 }
 
-group = 'com.baemin.touchorder'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+version = '1.0.0'
+sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
-}
+	compile('org.springframework.boot:spring-boot-starter-data-jpa')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.hibernate:hibernate-java8')
+	compile('pl.allegro.tech.boot:handlebars-spring-boot-starter:0.3.1')
+	compile('org.projectlombok:lombok:1.18.2')
+	annotationProcessor('org.projectlombok:lombok:1.18.2')
+	compile fileTree(dir: 'libs', include: '*.jar')
 
-test {
-	useJUnitPlatform()
+	runtime('com.h2database:h2')
+	runtime('net.rakugakibox.spring.boot:logback-access-spring-boot-starter:2.7.1')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('org.assertj:assertj-core:3.10.0')
+	testCompile('org.apache.httpcomponents:httpclient:4.5.6')
 }
