@@ -129,14 +129,14 @@ public class PrintService implements PrintProvider{
 
             String document = "";
             document += "^XA";
-            document += "^CW1,E:KFONT3.TTF^CI28^FS";
-            document += String.format("^FO24,24^A1N,30,30^FD%s^FS", shopName);
-            document += String.format("^FO24,64^A1N,30,30^FD%s^FS", qrType);
-            document += String.format("^FO24,104^A1N,30,30^FD%s^FS", tableNumber);
-            document += String.format("^FO24,144^A1N,30,30^FD%s^FS", tableName);
-            document += String.format("^FO24,184^A1N,30,30^FD%s^FS", token);
+            document += "^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
+            document += String.format("^FO24,24^A2N,30,30^FD%s^FS", shopName);
+            document += String.format("^FO24,64^A2N,30,30^FD%s^FS", qrType);
+            document += String.format("^FO24,104^A2N,30,30^FD%s^FS", tableNumber);
+            document += String.format("^FO24,144^A2N,30,30^FD%s^FS", tableName);
+            document += String.format("^FO24,184^A2N,30,30^FD%s^FS", token);
             document += String.format("^FO24,295^BQ,2,5^FDHM,A%s^FS", qrImage);
-            document += String.format("^FO24,550^A1N,30,30^FD%s^FS", tableName);
+            document += String.format("^FO24,450^A2N,30,30^FD%s^FS", tableName);
             document += "^XZ";
 
             connection.write(document.getBytes());
