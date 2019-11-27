@@ -9,16 +9,18 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PrintItem {
 
-    private String assetId;
+    private long qrSeq;
 
-    private String assetName;
+    private String shopName;
 
-    private String userNumber;
+    private String qrType;
 
-    private String userName;
+    private String tableNumber;
 
-    private String userDepartmentName;
+    private String tableName;
 
-    private String serialNumber;
+    private String token;
+
+    private String qrImageUrl;
 
 }

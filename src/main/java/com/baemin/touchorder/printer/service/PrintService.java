@@ -2,6 +2,7 @@ package com.baemin.touchorder.printer.service;
 
 import com.baemin.touchorder.printer.dto.PrintDto;
 import com.baemin.touchorder.printer.dto.PrintItem;
+import com.baemin.touchorder.printer.util.ImageUrlToZplConverter;
 import com.zebra.sdk.comm.Connection;
 import com.zebra.sdk.comm.ConnectionException;
 import com.zebra.sdk.comm.DriverPrinterConnection;
@@ -16,6 +17,12 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -25,6 +32,7 @@ import java.util.regex.Pattern;
 public class PrintService implements PrintProvider{
     private Connection connection;
     private ZebraPrinter printer;
+    private ImageUrlToZplConverter converter = new ImageUrlToZplConverter();
 
     @PostConstruct
     public void postConstruct() {
@@ -60,49 +68,40 @@ public class PrintService implements PrintProvider{
     }
 
     private byte[] getZPL(PrintItem printItem) {
-        String assetId = printItem.getAssetId();
-        String assetName = printItem.getAssetName();
-        String userDepartmentName1 = printItem.getUserDepartmentName().isEmpty() ? "재고" : printItem.getUserDepartmentName();
-        String userDepartmentName2 = "";
 
-        if (printItem.getUserDepartmentName().length() > 10) {
-            userDepartmentName1 = printItem.getUserDepartmentName().substring(0,9);
-            userDepartmentName2 = printItem.getUserDepartmentName().substring(10);
-        }
+        String document = "^XA^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
+        document += String.format("^FO24,24^A2N,30,30^FD%s^FS", printItem.getShopName());
+        document += String.format("^FO24,64^A2N,30,30^FD%s^FS", printItem.getQrType());
+        document += String.format("^FO24,104^A2N,30,30^FD%s^FS", printItem.getTableNumber());
+        document += String.format("^FO24,144^A2N,30,30^FD%s^FS", printItem.getTableName());
+        document += String.format("^FO24,184^A2N,30,30^FD%s^FS", printItem.getToken());
 
-        String userInfo = printItem.getUserName().isEmpty() ? "" : printItem.getUserName() + "(" + printItem.getUserNumber() + ")";
-        String serialNumber = printItem.getSerialNumber();
-        if (serialNumber.length() > 13){
-            serialNumber = serialNumber.substring(0, 13);
-        }
+        // image
+//        document += String.format("^FO24,295^BQ,2,5^FDHM,A%s^FS", printItem);
 
-        return String.format("^XA^LL648^CW1,E:KFONT3.FNT^CI28^FS^FO24,24^A1N,30,30^FD%s^FS^FO24,64^A1N,30,30^FD%s^FS^FO24,104^A1N,30,30^FD%s^FS^FO24,144^A1N,30,30^FD%s^FS^FO24,184^A1N,30,30^FD%s^FS^FO360,295^BQ,2,5^FDHM,A%s^FS^FO24,550^A1N,30,30^FD%s^FS^XZ",
-                userDepartmentName1,
-                userDepartmentName2,
-                userInfo,
-                assetId,
-                serialNumber,
-                assetId,
-                assetName).getBytes();
+        document += String.format("^FO24,450^A2N,30,30^FD%s^FS^XZ", printItem.getTableName());
+
+        return document.getBytes();
     }
 
     // TODO 유효성 체크
     @Async
     @Override
-    public List<String> print(PrintDto printDto) {
-        List<PrintItem> printItems = printDto.getSortedList();
-        List<String> failList = new ArrayList<String>();
+    public List<Long> print(PrintDto printDto) {
+
+        List<PrintItem> printItems = printDto.getPrintItems();
+        int count = printDto.getRepeat();
+        List<Long> failList = new ArrayList<>();
+
         for (PrintItem printItem : printItems) {
-            String assetId = printItem.getAssetId();
-            try {
-                if (invalidCheck(assetId)) {
-                    failList.add(assetId);
-                    continue;
+            for (int i = 0; i < count; i++) {
+                long seq = printItem.getQrSeq();
+                try {
+                    connection.write(getZPL(printItem));
+                } catch (ConnectionException e) {
+                    failList.add(seq);
+                    log.error("Label Connection Error, errorMessage: {}, failList: {}", e.getMessage(), failList, e);
                 }
-                connection.write(getZPL(printItem));
-            } catch (ConnectionException e) {
-                failList.add(assetId);
-                log.error("Label Connection Error, errorMessage: {}", e.getMessage(), e);
             }
         }
 
@@ -125,22 +124,32 @@ public class PrintService implements PrintProvider{
             String tableNumber = "table 1";
             String tableName = "일이삼사오육칠팔구십";
             String token = "328321983218321983218";
-            String qrImage = "hello world";
 
-            String document = "";
-            document += "^XA";
-            document += "^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
+            URL url = new URL("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png");
+            BufferedImage originalImage = ImageIO.read(url);
+
+            int w = originalImage.getWidth();
+            int h = originalImage.getHeight();
+            BufferedImage dimg = new BufferedImage(w / 8, h / 8, originalImage.getType());
+            Graphics2D g = dimg.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g.drawImage(originalImage, 0, 0, w / 8, h / 8, 0, 0, w, h, null);
+            g.dispose();
+
+            String document = "^XA^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
             document += String.format("^FO24,24^A2N,30,30^FD%s^FS", shopName);
             document += String.format("^FO24,64^A2N,30,30^FD%s^FS", qrType);
             document += String.format("^FO24,104^A2N,30,30^FD%s^FS", tableNumber);
             document += String.format("^FO24,144^A2N,30,30^FD%s^FS", tableName);
             document += String.format("^FO24,184^A2N,30,30^FD%s^FS", token);
-            document += String.format("^FO24,295^BQ,2,5^FDHM,A%s^FS", qrImage);
-            document += String.format("^FO24,450^A2N,30,30^FD%s^FS", tableName);
-            document += "^XZ";
+            document += converter.convertFromImg(dimg, 24, 230);
+            document += String.format("^FO24,550^A2N,30,30^FD%s^FS^XZ", tableName);
 
             connection.write(document.getBytes());
         } catch (ConnectionException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
