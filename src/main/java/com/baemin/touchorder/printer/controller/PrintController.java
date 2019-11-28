@@ -18,7 +18,7 @@ public class PrintController {
 
     @PostMapping
     public Boolean print(@RequestBody PrintDto printDto) {
-        List<Long> failList = printService.print(printDto);
+        List<String> failList = printService.print(printDto);
         return true;
     }
 

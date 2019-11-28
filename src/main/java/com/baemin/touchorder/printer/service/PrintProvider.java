@@ -5,7 +5,7 @@ import com.baemin.touchorder.printer.dto.PrintDto;
 import java.util.List;
 
 public interface PrintProvider {
-    List<Long> print(PrintDto printDto);
+    List<String> print(PrintDto printDto);
 
     void print();
 

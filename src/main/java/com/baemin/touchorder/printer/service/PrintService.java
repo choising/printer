@@ -66,40 +66,53 @@ public class PrintService implements PrintProvider{
         }
     }
 
-    private byte[] getZPL(PrintItem printItem) {
+    private byte[] getZPL(PrintItem printItem) throws IOException {
 
         String document = "^XA^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
-        document += String.format("^FO24,24^A2N,30,30^FD%s^FS", printItem.getShopName());
-        document += String.format("^FO24,64^A2N,30,30^FD%s^FS", printItem.getQrType());
-        document += String.format("^FO24,104^A2N,30,30^FD%s^FS", printItem.getTableNumber());
-        document += String.format("^FO24,144^A2N,30,30^FD%s^FS", printItem.getTableName());
-        document += String.format("^FO24,184^A2N,30,30^FD%s^FS", printItem.getToken());
-
-        // image
-//        document += String.format("^FO24,295^BQ,2,5^FDHM,A%s^FS", printItem);
-
-        document += String.format("^FO24,450^A2N,30,30^FD%s^FS^XZ", printItem.getTableName());
+        document = getConditionZPL(printItem, document);
 
         return document.getBytes();
     }
 
-    // TODO 유효성 체크
+    private String getConditionZPL(PrintItem printItem, String document) throws IOException {
+
+        document += String.format("^FO24,24^A2N,30,30^FD%s^FS", printItem.getShopName());
+        document += String.format("^FO24,64^A2N,30,30^FD%s^FS", printItem.getQrType());
+
+        String tableNumber = printItem.getTableNumber();
+
+        if (!tableNumber.equals("0") && !tableNumber.equals("99999")) {
+            document += String.format("^FO24,104^A2N,30,30^FD%s^FS", printItem.getTableNumber());
+            document += String.format("^FO24,144^A2N,30,30^FD%s^FS", printItem.getTableName());
+        }
+
+        document += String.format("^FO24,184^A2N,30,30^FD%s^FS", printItem.getToken());
+        document += converter.convertFromImg(getBufferedImage(printItem.getQrImageUrl()), 24, 210);
+
+        if (!tableNumber.equals("0") && !tableNumber.equals("99999")) {
+            document += String.format("^FO24,450^A2N,30,30^FD%s^FS^XZ", printItem.getTableName());
+        }
+
+        return document;
+    }
+
     @Async
     @Override
-    public List<Long> print(PrintDto printDto) {
+    public List<String> print(PrintDto printDto) {
 
         List<PrintItem> printItems = printDto.getPrintItems();
         int count = printDto.getCount();
-        List<Long> failList = new ArrayList<>();
+        List<String> failList = new ArrayList<>();
 
         for (PrintItem printItem : printItems) {
             for (int i = 0; i < count; i++) {
-                long seq = printItem.getQrSeq();
                 try {
                     connection.write(getZPL(printItem));
                 } catch (ConnectionException e) {
-                    failList.add(seq);
+                    failList.add(printItem.getToken());
                     log.error("Label Connection Error, errorMessage: {}, failList: {}", e.getMessage(), failList, e);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -124,17 +137,7 @@ public class PrintService implements PrintProvider{
             String tableName = "일이삼사오육칠팔구십";
             String token = "328321983218321983218";
 
-            URL url = new URL("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png");
-            BufferedImage originalImage = ImageIO.read(url);
-
-            int w = originalImage.getWidth();
-            int h = originalImage.getHeight();
-            BufferedImage dimg = new BufferedImage(w / 8, h / 8, originalImage.getType());
-            Graphics2D g = dimg.createGraphics();
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g.drawImage(originalImage, 0, 0, w / 8, h / 8, 0, 0, w, h, null);
-            g.dispose();
+            BufferedImage img = getBufferedImage("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png");
 
             String document = "^XA^CW2,E:BMHANNA_11YRS_TT.TTF^CI26^FS";
             document += String.format("^FO24,24^A2N,30,30^FD%s^FS", shopName);
@@ -142,7 +145,7 @@ public class PrintService implements PrintProvider{
             document += String.format("^FO24,104^A2N,30,30^FD%s^FS", tableNumber);
             document += String.format("^FO24,144^A2N,30,30^FD%s^FS", tableName);
             document += String.format("^FO24,184^A2N,30,30^FD%s^FS", token);
-            document += converter.convertFromImg(dimg, 24, 210);
+            document += converter.convertFromImg(img, 24, 210);
             document += String.format("^FO24,650^A2N,30,30^FD%s^FS^XZ", tableName);
 
             connection.write(document.getBytes());
@@ -151,6 +154,23 @@ public class PrintService implements PrintProvider{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private BufferedImage getBufferedImage(String urlText) throws IOException {
+        URL url = new URL(urlText);
+        BufferedImage originalImage = ImageIO.read(url);
+
+        int w = originalImage.getWidth();
+        int h = originalImage.getHeight();
+        System.out.println("w : " + w +", h : " + h);
+        BufferedImage resizeImage = new BufferedImage(w / 16, h / 16, originalImage.getType());
+        Graphics2D g = resizeImage.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(originalImage, 0, 0, w / 16, h / 16, 0, 0, w, h, null);
+        g.dispose();
+        System.out.println("resize w : " + w +", resize h : " + h);
+        return resizeImage;
     }
 
     @Override
