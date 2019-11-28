@@ -90,7 +90,7 @@ public class PrintService implements PrintProvider{
         document += converter.convertFromImg(getBufferedImage(printItem.getQrImageUrl()), 24, 210);
 
         if (!tableNumber.equals("0") && !tableNumber.equals("99999")) {
-            document += String.format("^FO24,450^A2N,30,30^FD%s^FS^XZ", printItem.getTableName());
+            document += String.format("^FO24,650^A2N,30,30^FD%s^FS^XZ", printItem.getTableName());
         }
 
         return document;
@@ -149,9 +149,7 @@ public class PrintService implements PrintProvider{
             document += String.format("^FO24,650^A2N,30,30^FD%s^FS^XZ", tableName);
 
             connection.write(document.getBytes());
-        } catch (ConnectionException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ConnectionException | IOException e) {
             e.printStackTrace();
         }
     }
