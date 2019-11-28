@@ -21,7 +21,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +89,7 @@ public class PrintService implements PrintProvider{
     public List<Long> print(PrintDto printDto) {
 
         List<PrintItem> printItems = printDto.getPrintItems();
-        int count = printDto.getRepeat();
+        int count = printDto.getCount();
         List<Long> failList = new ArrayList<>();
 
         for (PrintItem printItem : printItems) {
@@ -143,8 +142,8 @@ public class PrintService implements PrintProvider{
             document += String.format("^FO24,104^A2N,30,30^FD%s^FS", tableNumber);
             document += String.format("^FO24,144^A2N,30,30^FD%s^FS", tableName);
             document += String.format("^FO24,184^A2N,30,30^FD%s^FS", token);
-            document += converter.convertFromImg(dimg, 24, 230);
-            document += String.format("^FO24,550^A2N,30,30^FD%s^FS^XZ", tableName);
+            document += converter.convertFromImg(dimg, 24, 210);
+            document += String.format("^FO24,650^A2N,30,30^FD%s^FS^XZ", tableName);
 
             connection.write(document.getBytes());
         } catch (ConnectionException e) {

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/w1/print")
+@RequestMapping("/v1/print")
 public class PrintController {
 
     @Autowired

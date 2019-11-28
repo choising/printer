@@ -9,8 +9,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PrintItem {
 
-    private long qrSeq;
-
     private String shopName;
 
     private String qrType;

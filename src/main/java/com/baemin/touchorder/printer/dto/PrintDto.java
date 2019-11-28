@@ -15,6 +15,6 @@ public class PrintDto {
 
     private List<PrintItem> printItems;
 
-    private int repeat;
+    private int count;
 
 }
