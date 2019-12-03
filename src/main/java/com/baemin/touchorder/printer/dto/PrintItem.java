@@ -1,12 +1,13 @@
 package com.baemin.touchorder.printer.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
+@ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class PrintItem {
 
     private String shopName;
