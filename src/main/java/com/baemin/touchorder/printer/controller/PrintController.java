@@ -6,7 +6,10 @@ import com.baemin.touchorder.printer.dto.PrintItem;
 import com.baemin.touchorder.printer.service.PrintService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -51,6 +54,12 @@ public class PrintController {
     public ApiResponse<Boolean> check() {
         boolean isReady = printService.isReady();
         return isReady ? new ApiResponse<>(true) : new ApiResponse<>(false, "connect fail.");
+    }
+
+    @PostMapping("/v1/print/test")
+    public ApiResponse<Boolean> test(@RequestBody PrintItem printItem) {
+        printService.testPrint(printItem);
+        return new ApiResponse<>(true);
     }
 
     @GetMapping("/v1/print/cut")

@@ -29,7 +29,7 @@ import java.util.List;
 @Service
 public class PrintService {
 
-    private static final String FONT_HANNA_11_YRS = "E:BMHANNA_11YRS_TT.TTF";
+    private static final String FONT_HANNA_PRO = "E:BMHANNAPRO.TTF";
 
     private static final String FONT_EULJIRO = "E:BMEULJIROTTF.TTF";
 
@@ -89,7 +89,6 @@ public class PrintService {
 
     public void testPrint(PrintItem item) {
         try {
-
             String document = getHeaderOfZPL(FONT_EULJIRO);
 
             document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
@@ -127,7 +126,7 @@ public class PrintService {
 
     private byte[] getZPL(PrintItem item) throws IOException {
 
-        String document = getHeaderOfZPL(FONT_HANNA_11_YRS);
+        String document = getHeaderOfZPL(FONT_HANNA_PRO);
 
         document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
         document += String.format("^FO10,55^A2N,30,30^FD%s^FS", item.getShopName());
