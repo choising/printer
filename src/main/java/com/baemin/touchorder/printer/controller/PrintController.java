@@ -56,6 +56,12 @@ public class PrintController {
         return isReady ? new ApiResponse<>(true) : new ApiResponse<>(false, "connect fail.");
     }
 
+    /***
+     * TEST 로 단 건 인쇄를 하기 위한 Controller
+     *
+     * @param printItem
+     * @return
+     */
     @PostMapping("/v1/print/test")
     public ApiResponse<Boolean> test(@RequestBody PrintItem printItem) {
         printService.testPrint(printItem);
