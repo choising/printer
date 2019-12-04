@@ -1,7 +1,9 @@
 package com.baemin.touchorder.printer.controller;
 
+import com.baemin.touchorder.printer.dto.ApiResponse;
 import com.baemin.touchorder.printer.dto.PrintDto;
-import com.baemin.touchorder.printer.service.PrintProvider;
+import com.baemin.touchorder.printer.dto.PrintItem;
+import com.baemin.touchorder.printer.service.PrintService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -10,38 +12,48 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/print")
 public class PrintController {
 
     @Autowired
-    private PrintProvider printService;
+    private PrintService printService;
 
-    @PostMapping
-    public Boolean print(@RequestBody PrintDto printDto) {
-        System.out.println("printDto : " + printDto);
+    /***
+     * 배민오더 어드민 인쇄 요청을 받는 Controller
+     *
+     * @param printDto
+     * @return
+     */
+    @PostMapping("/v1/print")
+    public ApiResponse<Boolean> print(@RequestBody PrintDto printDto) {
+
+        log.info("[Print-Request] Request QR Print - itemCount: {}, repeatCount: {}", printDto.getPrintItems().size(), printDto.getCount());
+
+        // call print service
         List<String> failList = printService.print(printDto);
-        return true;
+
+        // failList 가 비어있지 않으면 Error
+        if (!failList.isEmpty()) {
+            log.info("[Print-Error] QR Print Error! - failList: {}", failList);
+            new ApiResponse<>(false, String.valueOf(failList));
+        }
+
+        // success
+        log.info("[Print-Ok] QR Print Success - itemCount: {}, repeatCount: {}", printDto.getPrintItems().size(), printDto.getCount());
+        return new ApiResponse<>(true);
     }
 
-    @GetMapping
-    public Boolean print() {
-        printService.print();
-        return true;
-    }
-
-    @GetMapping("/check")
-    public Boolean check() {
+    /***
+     * 프린터 연결상태 health check controller
+     *
+     * @return
+     */
+    @GetMapping("/v1/print/check")
+    public ApiResponse<Boolean> check() {
         boolean isReady = printService.isReady();
-        return true;
+        return isReady ? new ApiResponse<>(true) : new ApiResponse<>(false, "connect fail.");
     }
 
-    @GetMapping("/reconnection")
-    public Boolean reconnection() {
-        printService.reconnection();
-        return true;
-    }
-
-    @GetMapping("/cut")
+    @GetMapping("/v1/print/cut")
     public Boolean cut() {
         printService.cutting();
         return true;

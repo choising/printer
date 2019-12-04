@@ -10,6 +10,8 @@ import lombok.*;
 @AllArgsConstructor
 public class PrintItem {
 
+    private long shopNumber;
+
     private String shopName;
 
     private String qrType;

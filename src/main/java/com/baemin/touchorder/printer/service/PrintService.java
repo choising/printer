@@ -22,37 +22,95 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
-public class PrintService implements PrintProvider{
+public class PrintService {
+
+    private static final String FONT_HANNA_11_YRS = "E:BMHANNA_11YRS_TT.TTF";
+
+    private static final String FONT_EULJIRO = "E:BMEULJIROTTF.TTF";
+
     private Connection connection;
+
     private ZebraPrinter printer;
+
     private ImageUrlToZplConverter converter = new ImageUrlToZplConverter();
 
     @PostConstruct
     public void postConstruct() {
         try {
+            // find usb driver printers
             DiscoveredPrinterDriver[] discoveredPrinterDrivers = UsbDiscoverer.getZebraDriverPrinters();
             if (discoveredPrinterDrivers.length == 0) {
                 log.error("Not Found Printer");
                 return;
             }
+
+            // get first index printer
             connection = new DriverPrinterConnection(discoveredPrinterDrivers[0].printerName);
+
+            // open
             connection.open();
+
             log.info("Connection Open");
         } catch (ConnectionException e) {
             log.error("Print Connection Fail!!, errorMessage: {}", e.getMessage(), e);
             System.exit(-1);
         }
-        getPrinter();
+
+        setPrinter();
     }
 
-    private void getPrinter() {
+    @Synchronized
+    public List<String> print(PrintDto printDto) {
+
+        // print fail list
+        List<String> failList = new ArrayList<>();
+
+        for (PrintItem printItem : printDto.getPrintItems()) {
+            for (int i = 0; i < printDto.getCount(); i++) {
+                try {
+                    log.info("[Print-Start] lets print! - token : {}", printItem.getToken());
+                    connection.write(getZPL(printItem));
+                } catch (ConnectionException e) {
+                    failList.add(printItem.getToken());
+                    log.error("[Print-Fail] Label Connection Error, errorMessage: {}, fail: {}", e.getMessage(), printItem.getToken(), e);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return failList;
+    }
+
+    public void testPrint(PrintItem item) {
+        try {
+
+            String document = getHeaderOfZPL(FONT_EULJIRO);
+
+            document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
+            document += String.format("^FO10,55^A2N,30,30^FD%s^FS", item.getShopName());
+            document += String.format("^FO10,95^A2N,30,30^FD%s^FS", item.getQrType());
+            document += String.format("^FO10,135^A2N,30,30^FD%s^FS", item.getTableNumber());
+            document += String.format("^FO10,175^A2N,30,30^FD%s^FS", item.getTableName());
+            document += String.format("^FO10,210^A2N,25,25^FD%s^FS", item.getToken());
+            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 63, 250);
+            document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
+            document += "^XZ";
+
+            connection.write(document.getBytes());
+            System.out.println(document);
+
+        } catch (ConnectionException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setPrinter() {
         try {
             long start = System.currentTimeMillis();
 
@@ -67,97 +125,43 @@ public class PrintService implements PrintProvider{
         }
     }
 
-    private byte[] getZPL(PrintItem printItem) throws IOException {
-        String document = "^XA^CW2,E:BMHANNA_11YRS_TT.TTF^CI28^FS";
-        document += getConditionZPL(printItem, document);
-        return document.getBytes();
-    }
+    private byte[] getZPL(PrintItem item) throws IOException {
 
-    private String getConditionZPL(PrintItem printItem, String document) throws IOException {
+        String document = getHeaderOfZPL(FONT_HANNA_11_YRS);
 
-        String shopName = URLDecoder.decode(printItem.getShopName(), "UTF-8");
-        String qrType = URLDecoder.decode(printItem.getQrType(), "UTF-8");
+        document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
+        document += String.format("^FO10,55^A2N,30,30^FD%s^FS", item.getShopName());
+        document += String.format("^FO10,95^A2N,30,30^FD%s^FS", item.getQrType());
 
-        document += String.format("^FO10,24^A2N,30,30^FD%s^FS", shopName);
-        document += String.format("^FO10,64^A2N,30,30^FD%s^FS", qrType);
+        String tableNumber = item.getTableNumber();
 
-        String tableNumber = printItem.getTableNumber();
-        String tableName = URLDecoder.decode(printItem.getTableName(), "UTF-8");
-
-        if (!tableNumber.equals("0") && !tableNumber.equals("99999")) {
-            document += String.format("^FO10,104^A2N,30,30^FD%s^FS", printItem.getTableNumber());
-            document += String.format("^FO10,144^A2N,30,30^FD%s^FS", tableName);
+        // 서빙 QR 일 때 추가 정보, tableNumber 를 기준으로 0과 99999가 아니면!
+        if (isServingQr(tableNumber)) {
+            document += String.format("^FO10,135^A2N,30,30^FD%s^FS", tableNumber);
+            document += String.format("^FO10,175^A2N,30,30^FD%s^FS", item.getTableName());
         }
 
-        document += String.format("^FO10,184^A2N,25,25^FD%s^FS", printItem.getToken());
-        document += converter.convertFromImg(getBufferedImage(printItem.getQrImageUrl()), 52, 250);
+        document += String.format("^FO10,210^A2N,25,25^FD%s^FS", item.getToken());
+        document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 63, 250);
 
-        if (!tableNumber.equals("0") && !tableNumber.equals("99999")) {
-            document += String.format("^FO80,530^A2N,30,30^FD%s^FS", tableName);
+        // 서빙 QR 일 때 QR 아래에 테이블 명을 적어준다.
+        if (isServingQr(tableNumber)) {
+            document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
         }
 
         document += "^XZ";
-        return document;
+
+        log.info("[Print-Make-ZPL] Success - zpl: {}", document);
+
+        return document.getBytes();
     }
 
-    @Synchronized
-    @Override
-    public List<String> print(PrintDto printDto) {
-
-        List<PrintItem> printItems = printDto.getPrintItems();
-        int count = printDto.getCount();
-        List<String> failList = new ArrayList<>();
-
-        for (PrintItem printItem : printItems) {
-            for (int i = 0; i < count; i++) {
-                try {
-                    connection.write(getZPL(printItem));
-                } catch (ConnectionException e) {
-                    failList.add(printItem.getToken());
-                    log.error("Label Connection Error, errorMessage: {}, failList: {}", e.getMessage(), failList, e);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-//
-//        try {
-//            long millis = printItems.size() * 1100;
-//            Thread.sleep(millis);
-//            cutting();
-//        } catch (InterruptedException e) {
-//            log.error("Sleep Interrupted Error, errorMessage: {}", e.getMessage(), e);
-//        }
-
-        return failList;
+    private boolean isServingQr(String tableNumber) {
+        return !tableNumber.equals("0") && !tableNumber.equals("99999");
     }
 
-    @Override
-    public void print() {
-        try {
-            long shopNumber = 123456789;
-            String shopName = "최승민테스트테스트테스트테스트...";
-            String qrType = "서빙 QR";
-            String tableNumber = "table 1";
-            String tableName = "테이블 1";
-            String token = "616D35EXEQXMEMVRC615191120";
-
-            BufferedImage img = getBufferedImage("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png");
-
-            String document = "^XA^CW2,E:BMEULJIROTTF.TTF^CI28^FS";
-            document += String.format("^FO10,15^A2N,30,30^FD%s^FS", shopNumber);
-            document += String.format("^FO10,55^A2N,30,30^FD%s^FS", shopName);
-            document += String.format("^FO10,95^A2N,30,30^FD%s^FS", qrType);
-            document += String.format("^FO10,135^A2N,30,30^FD%s^FS", tableNumber);
-            document += String.format("^FO10,175^A2N,30,30^FD%s^FS", tableName);
-            document += String.format("^FO10,210^A2N,25,25^FD%s^FS", token);
-            document += converter.convertFromImg(img, 63, 250);
-            document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", tableName);
-
-            connection.write(document.getBytes());
-        } catch (ConnectionException | IOException e) {
-            e.printStackTrace();
-        }
+    private String getHeaderOfZPL(String font) {
+        return String.format("^XA^CW2,%s^CI28^FS", font);
     }
 
     private BufferedImage getBufferedImage(String urlText) throws IOException {
@@ -167,6 +171,7 @@ public class PrintService implements PrintProvider{
         int w = originalImage.getWidth();
         int h = originalImage.getHeight();
 
+        // qr size 300 x 300
         BufferedImage resizeImage = new BufferedImage(300, 300, originalImage.getType());
         Graphics2D g = resizeImage.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
@@ -176,7 +181,6 @@ public class PrintService implements PrintProvider{
         return resizeImage;
     }
 
-    @Override
     public void cutting() {
         try {
             connection.write("^XA~JK^XZ".getBytes());
@@ -185,35 +189,12 @@ public class PrintService implements PrintProvider{
         }
     }
 
-    @Override
     public synchronized boolean isReady() {
         if (printer == null) {
-            getPrinter();
+            setPrinter();
             return false;
         }
-        return true; // printer.getCurrentStatus().isReadyToPrint;
-    }
-
-    @Override
-    public void reconnection() {
-        if (printer == null) {
-            getPrinter();
-            log.info("reconnection print driver");
-        }
-    }
-
-    private boolean invalidCheck(String assetId) {
-
-        if (assetId.isEmpty()) {
-            return true;
-        }
-
-        // ex MB19050001 pattern match
-        if (!Pattern.matches("[A-Z]{2}[0-9]{8}", assetId)) {
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     @PreDestroy

@@ -71,16 +71,20 @@ public class ImageUrlToZplConverter {
         StringBuffer sb = new StringBuffer();
         Graphics2D graphics = originalImage.createGraphics();
         graphics.drawImage(originalImage, 0, 0, null);
+
         int height = originalImage.getHeight();
         int width = originalImage.getWidth();
         int rgb, red, green, blue, index = 0;
+
         char auxBinaryChar[] = {'0', '0', '0', '0', '0', '0', '0', '0'};
         widthBytes = width / 8;
+
         if (width % 8 > 0) {
             widthBytes = (width / 8) + 1;
         } else {
             widthBytes = width / 8;
         }
+
         this.total = widthBytes * height;
 
         for (int h = 0; h < height; h++) {
