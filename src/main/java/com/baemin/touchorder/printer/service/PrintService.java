@@ -91,13 +91,13 @@ public class PrintService {
         try {
             String document = getHeaderOfZPL(FONT_EULJIRO);
 
-            document += String.format("^FO5,15^A2N,30,30^FD%s^FS", item.getShopNumber());
-            document += String.format("^FO5,55^A2N,30,30^FD%s^FS", item.getShopName());
-            document += String.format("^FO5,95^A2N,30,30^FD%s^FS", item.getQrType());
-            document += String.format("^FO5,135^A2N,30,30^FD%s^FS", item.getTableNumber());
-            document += String.format("^FO5,175^A2N,30,30^FD%s^FS", item.getTableName());
-            document += String.format("^FO5,210^A2N,25,25^FD%s^FS", item.getToken());
-            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
+            document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
+            document += String.format("^FO10,55^A2N,30,30^FD%s^FS", item.getShopName());
+            document += String.format("^FO10,95^A2N,30,30^FD%s^FS", item.getQrType());
+            document += String.format("^FO10,135^A2N,30,30^FD%s^FS", item.getTableNumber());
+            document += String.format("^FO10,175^A2N,30,30^FD%s^FS", item.getTableName());
+            document += String.format("^FO10,210^A2N,25,25^FD%s^FS", item.getToken());
+            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 63, 250);
             document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
             document += "^XZ";
 
@@ -128,20 +128,20 @@ public class PrintService {
 
         String document = getHeaderOfZPL(FONT_HANNA_PRO);
 
-        document += String.format("^FO05,15^A2N,30,30^FD%s^FS", item.getShopNumber());
-        document += String.format("^FO05,55^A2N,30,30^FD%s^FS", item.getShopName());
-        document += String.format("^FO05,95^A2N,30,30^FD%s^FS", item.getQrType());
+        document += String.format("^FO10,15^A2N,30,30^FD%s^FS", item.getShopNumber());
+        document += String.format("^FO10,55^A2N,30,30^FD%s^FS", item.getShopName());
+        document += String.format("^FO10,95^A2N,30,30^FD%s^FS", item.getQrType());
 
         String tableNumber = item.getTableNumber();
 
         // 서빙 QR 일 때 추가 정보, tableNumber 를 기준으로 0과 99999가 아니면!
         if (isServingQr(tableNumber)) {
-            document += String.format("^FO05,135^A2N,30,30^FD%s^FS", tableNumber);
-            document += String.format("^FO05,175^A2N,30,30^FD%s^FS", item.getTableName());
+            document += String.format("^FO10,135^A2N,30,30^FD%s^FS", tableNumber);
+            document += String.format("^FO10,175^A2N,30,30^FD%s^FS", item.getTableName());
         }
 
-        document += String.format("^FO05,210^A2N,25,25^FD%s^FS", item.getToken());
-        document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
+        document += String.format("^FO10,210^A2N,25,25^FD%s^FS", item.getToken());
+        document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 64, 250);
 
         // 서빙 QR 일 때 QR 아래에 테이블 명을 적어준다.
         if (isServingQr(tableNumber)) {
