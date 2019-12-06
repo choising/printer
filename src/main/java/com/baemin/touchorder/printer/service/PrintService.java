@@ -97,7 +97,7 @@ public class PrintService {
             document += String.format("^FO05,135^A2N,30,30^FD%s^FS", item.getTableNumber());
             document += String.format("^FO05,175^A2N,30,30^FD%s^FS", item.getTableName());
             document += String.format("^FO05,210^A2N,25,25^FD%s^FS", item.getToken());
-            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
+            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 260);
             document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
             document += "^XZ";
 
