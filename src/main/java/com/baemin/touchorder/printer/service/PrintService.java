@@ -141,11 +141,14 @@ public class PrintService {
         }
 
         document += String.format("^FO05,210^A2N,25,25^FD%s^FS", item.getToken());
-        document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
 
         // 서빙 QR 일 때 QR 아래에 테이블 명을 적어준다.
         if (isServingQr(tableNumber)) {
+            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
             document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
+        } else {
+            // 픽업, 미리보기 QR 일 때에는 아래 공간을 조금 덜 확보하고 중앙에 맞추기 위하여 Y 좌표를 조금 더 내린다.
+            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 260);
         }
 
         document += "^XZ";
