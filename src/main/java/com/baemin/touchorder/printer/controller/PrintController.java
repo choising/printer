@@ -70,7 +70,10 @@ public class PrintController {
 
     @GetMapping("/v1/print/test")
     public ApiResponse<Boolean> testGet() {
-        PrintItem item = PrintItem.builder().shopName("아연카페").qrImageUrl("test").build();
+        PrintItem item = PrintItem.builder()
+                .shopName("아연카페")
+                .qrImageUrl("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13075068/qr-13075068-99999-20191125141222.png")
+                .build();
         printService.testPrint(item);
         return new ApiResponse<>(true);
     }
