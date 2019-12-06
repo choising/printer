@@ -68,6 +68,13 @@ public class PrintController {
         return new ApiResponse<>(true);
     }
 
+    @GetMapping("/v1/print/test")
+    public ApiResponse<Boolean> testGet() {
+        PrintItem item = PrintItem.builder().shopName("아연카페").qrImageUrl("test").build();
+        printService.testPrint(item);
+        return new ApiResponse<>(true);
+    }
+
     @GetMapping("/v1/print/cut")
     public Boolean cut() {
         printService.cutting();
