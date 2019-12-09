@@ -6,5 +6,19 @@
 </head>
 <body>
 <h1>Hello World</h1>
+<h2 id="count"></h2>
 </body>
+<script>
+    count = 5
+    function countDown() {
+        if (count < 1) {
+            self.close()
+        } else {
+            document.getElementById('count').innerHTML = count + "초 후에 창이 닫힙니다."
+            setTimeout("countDown()", 1000)
+            count--
+        }
+    }
+    countDown()
+</script>
 </html>

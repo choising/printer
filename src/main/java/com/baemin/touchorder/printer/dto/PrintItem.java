@@ -23,5 +23,4 @@ public class PrintItem {
     private String token;
 
     private String qrImageUrl;
-
 }
