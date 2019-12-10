@@ -70,39 +70,18 @@ public class PrintController {
 
     @GetMapping("/v1/print/test")
     public ApiResponse<Boolean> testGet() {
+
         PrintItem item1 = PrintItem.builder()
                 .shopNumber(13075068)
-                .shopName("TO 용상무님")
-                .qrType("MB17090005")
-                .tableNumber("")
-                .tableName("")
+                .shopName("운영QR테스트")
+                .qrType("")
+                .tableNumber("1")
+                .tableName("테이블 1")
                 .token("")
-                .qrImageUrl("https://cf-simple-s3-origin-touch-order-contents-227086249011.s3.ap-northeast-2.amazonaws.com/MB17090005.png")
-                .build();
-
-        PrintItem item2 = PrintItem.builder()
-                .shopNumber(13075068)
-                .shopName("TO 용상무님")
-                .qrType("IP19100010")
-                .tableNumber("")
-                .tableName("")
-                .token("")
-                .qrImageUrl("https://cf-simple-s3-origin-touch-order-contents-227086249011.s3.ap-northeast-2.amazonaws.com/IP19100010.png")
-                .build();
-
-        PrintItem item3 = PrintItem.builder()
-                .shopNumber(13075068)
-                .shopName("TO 용상무님")
-                .qrType("IP19100009")
-                .tableNumber("")
-                .tableName("")
-                .token("")
-                .qrImageUrl("https://cf-simple-s3-origin-touch-order-contents-227086249011.s3.ap-northeast-2.amazonaws.com/IP19100009.png")
+                .qrImageUrl("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png")
                 .build();
 
         printService.testPrint(item1);
-        printService.testPrint(item2);
-        printService.testPrint(item3);
 
         return new ApiResponse<>(true);
     }

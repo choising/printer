@@ -89,7 +89,7 @@ public class PrintService {
 
     public void testPrint(PrintItem item) {
         try {
-            String document = getHeaderOfZPL(FONT_EULJIRO);
+            String document = getHeaderOfZPL(FONT_HANNA_PRO);
 
             document += String.format("^FO05,15^A2N,30,30^FD%s^FS", item.getShopNumber());
             document += String.format("^FO05,55^A2N,30,30^FD%s^FS", item.getShopName());
@@ -97,8 +97,12 @@ public class PrintService {
             document += String.format("^FO05,135^A2N,30,30^FD%s^FS", item.getTableNumber());
             document += String.format("^FO05,175^A2N,30,30^FD%s^FS", item.getTableName());
             document += String.format("^FO05,210^A2N,25,25^FD%s^FS", item.getToken());
-            document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 265);
-            document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
+            if (isServingQr(item.getTableNumber())) {
+                document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
+                document += String.format("^FO0,530^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
+            } else {
+                document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 265);
+            }
             document += "^XZ";
 
             connection.write(document.getBytes());
