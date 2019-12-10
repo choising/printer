@@ -22,7 +22,7 @@ public class PrintFormController {
 
     @GetMapping("/v1/print/form")
     public String test() {
-        return "index";
+        return "success ";
     }
 
     @PostMapping("/v1/print/form")
