@@ -99,7 +99,7 @@ public class PrintService {
             document += String.format("^FO05,210^A2N,25,25^FD%s^FS", item.getToken());
             if (isServingQr(item.getTableNumber())) {
                 document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 250);
-                document += String.format("^FO0,535^A2N,30,30^FB430,1,0,C^FD%s^FS^XZ", item.getTableName());
+                document += String.format("^FO0,535^A2N,30,30^FB430,1,0,C^FD%s^FS", item.getTableName());
             } else {
                 document += converter.convertFromImg(getBufferedImage(item.getQrImageUrl()), 58, 265);
             }

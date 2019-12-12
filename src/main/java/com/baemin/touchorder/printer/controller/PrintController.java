@@ -81,7 +81,18 @@ public class PrintController {
                 .qrImageUrl("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png")
                 .build();
 
+        PrintItem item2 = PrintItem.builder()
+                .shopNumber(13075068)
+                .shopName("운영QR테스트")
+                .qrType("")
+                .tableNumber("0")
+                .tableName("")
+                .token("")
+                .qrImageUrl("https://cf-simple-s3-origin-touch-order-prod-contents-760831942475.s3.ap-northeast-2.amazonaws.com/qrcode/13029682/qr-13029682-0-20190903140444.png")
+                .build();
+
         printService.testPrint(item1);
+        printService.testPrint(item2);
 
         return new ApiResponse<>(true);
     }
